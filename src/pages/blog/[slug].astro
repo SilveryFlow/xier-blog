@@ -1,0 +1,242 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import DarkModeToggle from '../../components/DarkModeToggle.vue';
+
+export async function getStaticPaths() {
+  const posts = [
+    {
+      slug: 'welcome',
+      title: '欢迎来到我的博客',
+      pubDate: '2024-01-15',
+      description: '这是我的第一篇博客文章，介绍一下这个博客的由来和目的。',
+      content: `---
+title: "欢迎来到我的博客"
+pubDate: "2024-01-15"
+description: "这是我的第一篇博客文章，介绍一下这个博客的由来和目的。"
+---
+
+# 欢迎来到我的博客 🎉
+
+大家好，我是 XIER。这是我使用 Astro + Vue + UnoCSS 构建的个人博客。
+
+## 为什么写博客？
+
+1. **记录学习历程** - 把学到的知识整理成文章，可以加深理解
+2. **分享经验** - 希望我的经验能帮助到有需要的人
+3. **建立个人品牌** - 在互联网留下自己的印记
+
+## 技术栈
+
+这个博客使用以下技术构建：
+
+- **Astro** - 现代化的静态网站框架
+- **Vue** - 渐进式 JavaScript 框架
+- **UnoCSS** - 原子化 CSS 引擎
+
+## 接下来
+
+我会在这里分享：
+- 前端开发技术文章
+- 个人项目经验
+- 生活随想
+
+欢迎大家常来逛逛！👋`
+    },
+    {
+      slug: 'astro-vue-integration',
+      title: 'Astro 与 Vue 3 的完美结合',
+      pubDate: '2024-01-20',
+      description: '探索如何在 Astro 中使用 Vue 3 构建高性能的动态组件。',
+      content: `---
+title: "Astro 与 Vue 3 的完美结合"
+pubDate: "2024-01-20"
+description: "探索如何在 Astro 中使用 Vue 3 构建高性能的动态组件。"
+---
+
+# Astro 与 Vue 3 的完美结合
+
+Astro 是一个专注于内容驱动的静态站点生成器，而 Vue 3 是最流行的渐进式 JavaScript 框架之一。将它们结合在一起，可以获得两全其美的体验。
+
+## 为什么选择 Astro + Vue？
+
+### 1. 性能优先
+
+Astro 使用"岛屿架构"（Islands Architecture），默认只发送最小的 JavaScript。只有当需要交互时，才加载对应的组件。
+
+\`\`\`javascript
+// 这是一个静态组件，不需要 JS
+<StaticComponent />
+
+// 这是一个交互组件，会加载 JS
+<InteractiveComponent client:visible />
+\`\`\`
+
+### 2. Vue 3 的响应式优势
+
+Vue 3 的 Composition API 让代码组织更加清晰：
+
+\`\`\`javascript
+import { ref, computed, onMounted } from 'vue'
+
+export default {
+  setup() {
+    const count = ref(0)
+    const doubled = computed(() => count.value * 2)
+    
+    onMounted(() => {
+      console.log('Component mounted!')
+    })
+    
+    return { count, doubled }
+  }
+}
+\`\`\`
+
+### 3. UnoCSS 的原子化样式
+
+配合 UnoCSS，开发体验既高效又灵活：
+
+\`\`\`html
+<button class="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors">
+  按钮
+</button>
+\`\`\`
+
+## 总结
+
+Astro + Vue 3 + UnoCSS 是一个非常强大的组合，既能保证性能，又能提供出色的开发体验。`
+    },
+    {
+      slug: 'mobile-first-design',
+      title: '移动端优先设计的最佳实践',
+      pubDate: '2024-01-25',
+      description: '探讨如何构建真正移动端优先的响应式网站设计。',
+      content: `---
+title: "移动端优先设计的最佳实践"
+pubDate: "2024-01-25"
+description: "探讨如何构建真正移动端优先的响应式网站设计。"
+---
+
+# 移动端优先设计的最佳实践
+
+在当今移动互联网时代，移动端优先设计已经不是一种选择，而是必需品。
+
+## 什么是移动端优先？
+
+移动端优先（Mobile First）是一种设计理念，从最小屏幕开始设计，然后逐步扩展到更大的屏幕。
+
+## 核心原则
+
+### 1. 内容优先级
+
+在移动端，屏幕空间有限。我们需要仔细考虑：
+
+- 什么是最重要的内容？
+- 用户的核心任务是什么？
+- 如何用最少的元素传达最多的信息？
+
+### 2. 触摸友好
+
+- **更大的点击区域** - 至少 44x44 像素
+- **足够的间距** - 避免误触
+- **拇指区域** - 把重要操作放在拇指易触及的地方
+
+### 3. 性能优化
+
+移动端用户对加载速度更敏感：
+
+- 压缩图片
+- 延迟加载
+- 减少 HTTP 请求
+- 使用 CDN
+
+## UnoCSS 响应式前缀
+
+\`\`\`javascript
+// 移动端样式（默认）
+text-sm
+
+// 小屏幕及以上
+sm:text-base
+
+// 中等屏幕及以上
+md:text-lg
+
+// 大屏幕及以上
+lg:text-xl
+\`\`\`
+
+## 总结
+
+移动端优先不仅是技术，更是一种思维方式。从移动端出发，能让我们更好地理解用户需求。`
+    }
+  ];
+
+  return posts.map((post) => ({
+    params: { slug: post.slug },
+    props: { post }
+  }));
+}
+
+const { post } = Astro.props;
+---
+
+<BaseLayout title={`${post.title} - XIER's Blog`} description={post.description}>
+  <article class="max-w-3xl">
+    <header class="mb-8">
+      <a href="/blog" class="text-sm text-primary-600 dark:text-primary-400 hover:underline mb-4 inline-block">
+        ← 返回文章列表
+      </a>
+      <time class="text-sm text-gray-500 dark:text-gray-400 block mt-4">{post.pubDate}</time>
+      <h1 class="text-3xl md:text-4xl font-bold mt-2 mb-4 text-gray-900 dark:text-gray-100">
+        {post.title}
+      </h1>
+      <div class="flex items-center gap-4">
+        <DarkModeToggle client:load />
+      </div>
+    </header>
+    
+    <div class="prose prose-lg dark:prose-invert max-w-none">
+      <div set:html={post.content.replace(/---[\s\S]*?---/, '').replace(/^# /gm, '<h1 class="text-2xl font-bold mt-8 mb-4">').replace(/^## /gm, '<h2 class="text-xl font-bold mt-6 mb-3">').replace(/^### /gm, '<h3 class="text-lg font-semibold mt-4 mb-2">').replace(/<h1 class="text-2xl font-bold mt-8 mb-4">/g, '</div><h1 class="text-2xl font-bold mt-8 mb-4">').replace(/<h2 class="text-xl font-bold mt-6 mb-3">/g, '</div><h2 class="text-xl font-bold mt-6 mb-3">').replace(/<h3 class="text-lg font-semibold mt-4 mb-2">/g, '</div><h3 class="text-lg font-semibold mt-4 mb-2">').replace(/\n\n/g, '</p><p class="my-4">').replace(/`([^`]+)`/g, '<code class="bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded text-sm">$1</code>').replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre class="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg overflow-x-auto my-4"><code>$2</code></pre>').replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>').replace(/\*([^*]+)\*/g, '<em>$1</em>').replace(/^- /gm, '<li class="ml-4">') + '</p>'} />
+    </div>
+    
+    <footer class="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
+      <a href="/blog" class="text-primary-600 dark:text-primary-400 hover:underline">
+        ← 返回文章列表
+      </a>
+    </footer>
+  </article>
+</BaseLayout>
+
+<style>
+  .prose h1 {
+    @apply text-2xl font-bold mt-8 mb-4 text-gray-900 dark:text-gray-100;
+  }
+  .prose h2 {
+    @apply text-xl font-bold mt-6 mb-3 text-gray-900 dark:text-gray-100;
+  }
+  .prose h3 {
+    @apply text-lg font-semibold mt-4 mb-2 text-gray-900 dark:text-gray-100;
+  }
+  .prose p {
+    @apply my-4 text-gray-700 dark:text-gray-300 leading-relaxed;
+  }
+  .prose code {
+    @apply bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded text-sm;
+  }
+  .prose pre {
+    @apply bg-gray-100 dark:bg-gray-800 p-4 rounded-lg overflow-x-auto my-4;
+  }
+  .prose pre code {
+    @apply bg-transparent p-0;
+  }
+  .prose li {
+    @apply ml-4 my-2 text-gray-700 dark:text-gray-300;
+  }
+  .prose strong {
+    @apply font-semibold;
+  }
+  .prose a {
+    @apply text-primary-600 dark:text-primary-400 hover:underline;
+  }
+</style>
