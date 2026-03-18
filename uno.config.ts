@@ -34,6 +34,7 @@ export default defineConfig({
   shortcuts: {
     'btn': 'px-4 py-2 rounded-lg font-medium transition-all duration-200',
     'btn-primary': 'btn bg-primary-500 text-white hover:bg-primary-600',
-    'card': 'bg-white dark:bg-gray-800 rounded-xl shadow-md p-6'
+    'card': 'bg-white dark:bg-gray-800 rounded-xl shadow-md p-5 sm:p-6 border border-gray-100 dark:border-gray-700/50',
+    'gradient-text': 'bg-gradient-to-r from-primary-600 to-primary-400 bg-clip-text text-transparent'
   }
 })
