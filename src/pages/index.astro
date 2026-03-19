@@ -75,7 +75,7 @@ const formatDate = (dateStr: string) => {
       
       <div class="space-y-4">
         {posts.map((post) => (
-          <a href={`/blog/${post.slug}`} class="block card hover:shadow-lg hover:scale-[1.01] transition-all duration-200">
+          <a href={`/blog/${post.slug}`} class="block card hover:shadow-lg hover:scale-[1.01] transition-all duration-200 no-underline">
             <article>
               <time class="text-sm text-gray-500 dark:text-gray-400">{formatDate(post.pubDate)}</time>
               <h3 class="text-lg sm:text-xl font-semibold mt-2 mb-2 text-gray-900 dark:text-gray-100 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">

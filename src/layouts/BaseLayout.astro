@@ -97,6 +97,11 @@ const { title, description = 'A personal blog by XIER' } = Astro.props;
     -moz-osx-font-smoothing: grayscale;
   }
 
+  /* Remove underlines from all links */
+  a {
+    text-decoration: none;
+  }
+
   /* Safe area for mobile devices */
   .safe-area-bottom {
     padding-bottom: env(safe-area-inset-bottom, 0);
