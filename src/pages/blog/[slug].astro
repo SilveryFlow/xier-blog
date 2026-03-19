@@ -1,6 +1,8 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import DarkModeToggle from '../../components/DarkModeToggle.vue';
+import MarkdownIt from 'markdown-it';
+import { codeToHtml, bundledLanguages } from 'shiki';
 
 export async function getStaticPaths() {
   const posts = [
@@ -234,64 +236,235 @@ description: "介绍一下我自己，以及这个博客背后的故事。"
 }
 
 const { post } = Astro.props;
+
+// Unescape backticks first, then strip frontmatter
+const unescapedContent = post.content.replace(/\\`/g, '`');
+const rawContent = unescapedContent.replace(/^---[\s\S]*?---\n?/, '');
+
+// Extract code blocks and replace with placeholders
+let codeBlockIndex = 0;
+const codeBlocks: { lang: string; code: string; index: number }[] = [];
+
+const contentWithPlaceholders = rawContent.replace(
+  /```(\w+)?\n([\s\S]*?)```/g,
+  (_, lang, code) => {
+    const index = codeBlockIndex++;
+    codeBlocks.push({ lang: lang || 'text', code: code.trim(), index });
+    return `<pre data-code-block-index="${index}"></pre>`;
+  }
+);
+
+// Initialize markdown-it
+const md = new MarkdownIt({
+  html: true,
+  typographer: true,
+  linkify: true,
+  breaks: false
+});
+
+const renderedHtml = md.render(contentWithPlaceholders);
+
+// Highlight code blocks with shiki
+const highlightedCodeBlocks = await Promise.all(
+  codeBlocks.map(async ({ lang, code, index }) => {
+    const normalizedLang = lang.toLowerCase();
+    const shikiLang =
+      normalizedLang in bundledLanguages ? normalizedLang : 'text';
+    
+    try {
+      const html = await codeToHtml(code, {
+        lang: shikiLang,
+        theme: 'github-dark',
+        transformers: []
+      });
+      return { index, html };
+    } catch {
+      const escapedCode = code
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+      return {
+        index,
+        html: `<pre class="shiki-code-block rounded-lg p-4 overflow-x-auto my-4 text-sm font-mono relative group bg-gray-900 border border-gray-700"><code>${escapedCode}</code></pre>`
+      };
+    }
+  })
+);
+
+// Replace placeholders with highlighted code
+let finalHtml = renderedHtml;
+for (const { index, html } of highlightedCodeBlocks) {
+  finalHtml = finalHtml.replace(
+    `<pre data-code-block-index="${index}"></pre>`,
+    html
+  );
+}
 ---
 
 <BaseLayout title={`${post.title} - XIER's Blog`} description={post.description}>
-  <article class="max-w-3xl">
+  <article class="max-w-3xl mx-auto">
     <header class="mb-8">
-      <a href="/blog" class="text-sm text-primary-600 dark:text-primary-400 hover:underline mb-4 inline-block">
+      <a href="/blog" class="text-sm text-primary-600 dark:text-primary-400 mb-4 inline-block transition-colors">
         ← 返回文章列表
       </a>
       <time class="text-sm text-gray-500 dark:text-gray-400 block mt-4">{post.pubDate}</time>
-      <h1 class="text-3xl md:text-4xl font-bold mt-2 mb-4 text-gray-900 dark:text-gray-100">
+      <h1 class="text-3xl md:text-4xl font-bold mt-2 mb-4 text-gray-900 dark:text-gray-100 leading-tight">
         {post.title}
       </h1>
-      <div class="flex items-center gap-4">
-        <DarkModeToggle client:load />
-      </div>
     </header>
     
-    <div class="prose prose-lg dark:prose-invert max-w-none">
-      <div set:html={post.content.replace(/---[\s\S]*?---/, '').replace(/^# /gm, '<h1 class="text-2xl font-bold mt-8 mb-4">').replace(/^## /gm, '<h2 class="text-xl font-bold mt-6 mb-3">').replace(/^### /gm, '<h3 class="text-lg font-semibold mt-4 mb-2">').replace(/<h1 class="text-2xl font-bold mt-8 mb-4">/g, '</div><h1 class="text-2xl font-bold mt-8 mb-4">').replace(/<h2 class="text-xl font-bold mt-6 mb-3">/g, '</div><h2 class="text-xl font-bold mt-6 mb-3">').replace(/<h3 class="text-lg font-semibold mt-4 mb-2">/g, '</div><h3 class="text-lg font-semibold mt-4 mb-2">').replace(/\n\n/g, '</p><p class="my-4">').replace(/`([^`]+)`/g, '<code class="bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded text-sm">$1</code>').replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre class="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg overflow-x-auto my-4"><code>$2</code></pre>').replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>').replace(/\*([^*]+)\*/g, '<em>$1</em>').replace(/^- /gm, '<li class="ml-4">') + '</p>'} />
-    </div>
+    <div class="article-content" set:html={finalHtml} />
     
     <footer class="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
-      <a href="/blog" class="text-primary-600 dark:text-primary-400 hover:underline">
+      <a href="/blog" class="text-primary-600 dark:text-primary-400 transition-colors">
         ← 返回文章列表
       </a>
     </footer>
   </article>
 </BaseLayout>
 
-<style>
-  .prose h1 {
+<style is:global>
+  /* Article typography */
+  .article-content {
+    @apply text-gray-700 dark:text-gray-300 leading-relaxed;
+  }
+  
+  .article-content h1 {
     @apply text-2xl font-bold mt-8 mb-4 text-gray-900 dark:text-gray-100;
   }
-  .prose h2 {
-    @apply text-xl font-bold mt-6 mb-3 text-gray-900 dark:text-gray-100;
+  
+  .article-content h2 {
+    @apply text-xl font-bold mt-8 mb-4 text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 pb-2;
   }
-  .prose h3 {
-    @apply text-lg font-semibold mt-4 mb-2 text-gray-900 dark:text-gray-100;
+  
+  .article-content h3 {
+    @apply text-lg font-semibold mt-6 mb-3 text-gray-900 dark:text-gray-100;
   }
-  .prose p {
-    @apply my-4 text-gray-700 dark:text-gray-300 leading-relaxed;
+  
+  .article-content p {
+    @apply my-4 leading-7 text-base;
   }
-  .prose code {
-    @apply bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded text-sm;
+  
+  .article-content > *:first-child {
+    @apply mt-0;
   }
-  .prose pre {
-    @apply bg-gray-100 dark:bg-gray-800 p-4 rounded-lg overflow-x-auto my-4;
+  
+  .article-content a {
+    @apply text-primary-600 dark:text-primary-400;
   }
-  .prose pre code {
-    @apply bg-transparent p-0;
+  
+  .article-content ul,
+  .article-content ol {
+    @apply my-4 pl-6;
   }
-  .prose li {
-    @apply ml-4 my-2 text-gray-700 dark:text-gray-300;
+  
+  .article-content ul {
+    @apply list-disc;
   }
-  .prose strong {
-    @apply font-semibold;
+  
+  .article-content ol {
+    @apply list-decimal;
   }
-  .prose a {
-    @apply text-primary-600 dark:text-primary-400 hover:underline;
+  
+  .article-content li {
+    @apply my-2 leading-7;
+  }
+  
+  .article-content strong {
+    @apply font-semibold text-gray-900 dark:text-gray-100;
+  }
+  
+  .article-content em {
+    @apply italic;
+  }
+  
+  .article-content blockquote {
+    @apply border-l-4 border-primary-500 pl-4 my-4 italic text-gray-600 dark:text-gray-400;
+  }
+  
+  /* Inline code */
+  .article-content code:not(pre code) {
+    @apply bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-sm font-mono text-primary-600 dark:text-primary-400;
+  }
+  
+  /* Code blocks - shiki */
+  .article-content .shiki-code-block,
+  .article-content pre[class*="language-"] {
+    @apply rounded-lg overflow-x-auto my-4 text-sm font-mono relative;
+    @apply bg-gray-900 border border-gray-700;
+    /* Mobile-friendly: allow horizontal scroll */
+    max-width: 100%;
+    tab-size: 2;
+  }
+  
+  .article-content pre[class*="language-"] code {
+    @apply block w-full font-mono bg-transparent p-4;
+  }
+  
+  .article-content .shiki-code-block code,
+  .article-content pre[class*="language-"] code {
+    @apply block w-full font-mono;
+    overflow-x: auto;
+  }
+  
+  /* Ensure code blocks don't overflow on mobile */
+  .article-content pre {
+    @apply max-w-full overflow-x-auto;
+  }
+  
+  .article-content pre code {
+    @apply max-w-full;
+    overflow-x: auto;
+    display: block;
+  }
+  
+  /* Shiki dark theme overrides for dark mode */
+  .dark .shiki-code-block,
+  .dark .shiki-code-block span {
+    color: var(--shiki-dark) !important;
+    background-color: var(--shiki-dark-bg) !important;
+  }
+  
+  .shiki-code-block {
+    position: relative;
+  }
+  
+  .shiki-code-block .line {
+    @apply min-h-[1.5em];
+    display: block;
   }
 </style>
+
+<script>
+  // Add copy button to code blocks
+  document.querySelectorAll('.shiki-code-block, pre[class*="language-"]').forEach((pre) => {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'code-block-wrapper relative';
+    
+    if (pre.parentNode) {
+      pre.parentNode.insertBefore(wrapper, pre);
+      wrapper.appendChild(pre);
+    }
+    
+    const copyButton = document.createElement('button');
+    copyButton.className = 'copy-button absolute top-3 right-3 p-2 rounded-md bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white opacity-0 group-hover:opacity-100 transition-all duration-200 text-xs z-10';
+    copyButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>`;
+    copyButton.setAttribute('aria-label', '复制代码');
+    
+    copyButton.addEventListener('click', async () => {
+      const code = pre.querySelector('code');
+      const text = code ? code.textContent || '' : pre.textContent || '';
+      try {
+        await navigator.clipboard.writeText(text);
+        copyButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>`;
+        setTimeout(() => {
+          copyButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>`;
+        }, 2000);
+      } catch (err) {
+        console.error('复制失败:', err);
+      }
+    });
+    
+    wrapper.appendChild(copyButton);
+  });
+</script>
