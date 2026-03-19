@@ -1,6 +1,6 @@
 ---
 title: "Astro 与 Vue 3 的完美结合"
-pubDate: "2024-01-20"
+pubDate: "2026-03-19"
 description: "探索如何在 Astro 中使用 Vue 3 构建高性能的动态组件。"
 ---
 
